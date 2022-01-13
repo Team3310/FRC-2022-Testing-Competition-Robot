@@ -24,7 +24,7 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
     private List<Double> telemetryData = new ArrayList<>();
 
 
-    private double priorAutospeed = 0.0;
+//    private double priorAutospeed = 0.0;
 
     public CharacterizeDrivetrainCommand(DrivetrainSubsystem drivetrain) {
         this.drivetrain = drivetrain;
@@ -46,11 +46,11 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
         double position = drivetrain.getPose().translation.x;
         double velocity = drivetrain.getVelocity().x;
 
-        double battery = RobotController.getBatteryVoltage();
-        double motorVoltage = battery * Math.abs(priorAutospeed);
+//        double battery = RobotController.getBatteryVoltage();
+//        double motorVoltage = battery * Math.abs(priorAutospeed);
 
         double autospeed = autoSpeedEntry.getDouble(0.0);
-        priorAutospeed = autospeed;
+//        priorAutospeed = autospeed;
 
         drivetrain.drive(new Vector2(autospeed, 0.0), 0.0, false);
 

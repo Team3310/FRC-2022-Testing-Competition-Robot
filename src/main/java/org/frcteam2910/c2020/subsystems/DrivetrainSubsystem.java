@@ -30,8 +30,6 @@ import org.frcteam2910.common.util.InterpolatingTreeMap;
 
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -70,12 +68,12 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
             new Vector2(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0)        //back right
     );
 
-    private final SwerveDriveKinematics wpi_driveKinematics = new SwerveDriveKinematics(
-            new Translation2d(-TRACKWIDTH / 2.0, WHEELBASE / 2.0), //front left
-            new Translation2d(TRACKWIDTH / 2.0, WHEELBASE / 2.0), //front right
-            new Translation2d(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0), // back left
-            new Translation2d(TRACKWIDTH / 2.0, -WHEELBASE / 2.0) // back right
-    );
+    // private final SwerveDriveKinematics wpi_driveKinematics = new SwerveDriveKinematics(
+    //         new Translation2d(-TRACKWIDTH / 2.0, WHEELBASE / 2.0), //front left
+    //         new Translation2d(TRACKWIDTH / 2.0, WHEELBASE / 2.0), //front right
+    //         new Translation2d(-TRACKWIDTH / 2.0, -WHEELBASE / 2.0), // back left
+    //         new Translation2d(TRACKWIDTH / 2.0, -WHEELBASE / 2.0) // back right
+    // );
 
 
     private final SwerveModule[] modules;

@@ -1,20 +1,20 @@
 package org.frcteam2910.c2020;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import org.frcteam2910.c2020.commands.*;
-import org.frcteam2910.c2020.subsystems.*;
+import java.io.IOException;
+
+import org.frcteam2910.c2020.commands.BasicDriveCommand;
+import org.frcteam2910.c2020.commands.DriveCommand;
+import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2020.util.AutonomousChooser;
 import org.frcteam2910.c2020.util.AutonomousTrajectories;
 import org.frcteam2910.c2020.util.DriverReadout;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.input.Axis;
-import org.frcteam2910.common.robot.input.DPadButton;
 import org.frcteam2910.common.robot.input.XboxController;
 
-import java.io.IOException;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class RobotContainer {
     private final XboxController primaryController = new XboxController(Constants.PRIMARY_CONTROLLER_PORT);
@@ -31,6 +31,7 @@ public class RobotContainer {
             autonomousTrajectories = new AutonomousTrajectories(DrivetrainSubsystem.TRAJECTORY_CONSTRAINTS);
         } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Error building trajectories");
         }
         autonomousChooser = new AutonomousChooser(autonomousTrajectories);
 
@@ -42,6 +43,7 @@ public class RobotContainer {
         CommandScheduler.getInstance().setDefaultCommand(drivetrainSubsystem, new DriveCommand(drivetrainSubsystem, getDriveForwardAxis(), getDriveStrafeAxis(), getDriveRotationAxis()));
 
         driverReadout = new DriverReadout(this);
+        driverReadout.getSelectedLoadingBay();
 
         configureButtonBindings();
     }
