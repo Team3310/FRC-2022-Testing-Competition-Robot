@@ -43,6 +43,8 @@ public class AutonomousTrajectories {
     private Trajectory circuitTenBallAutoPartTwo;
     private Trajectory simplesquare;
     private Trajectory square;
+    private Trajectory TwoHundredInchTest;
+    private Trajectory sCurve;
 
     private final Trajectory eightBallCompatiblePartOne;
     private final Trajectory eightBallCompatiblePartTwo;
@@ -58,6 +60,13 @@ public class AutonomousTrajectories {
 
         eightBallAutoPartOne = new Trajectory(
                 new SimplePathBuilder(new Vector2(0,0), Rotation2.ZERO)
+                        .lineTo(new Vector2(200, 0))
+                        .build(),
+                trajectoryConstraints, SAMPLE_DISTANCE
+        );
+
+        sCurve = new Trajectory(
+                new SimplePathBuilder(new Vector2(0,0), Rotation2.ZERO)
                         .lineTo(new Vector2(200, 0), Rotation2.fromDegrees(90.0))
                         .arcTo(new Vector2(250, 50), new Vector2(200, 50))
                         .arcTo(new Vector2(300, 100), new Vector2(300, 50), Rotation2.fromDegrees(0.0))
@@ -65,6 +74,15 @@ public class AutonomousTrajectories {
                         .build(),
                 trajectoryConstraints, SAMPLE_DISTANCE
         );
+
+
+        TwoHundredInchTest = new Trajectory(
+                new SimplePathBuilder(new Vector2(0,0), Rotation2.ZERO)
+                        .lineTo(new Vector2(200, 0))
+                        .build(),
+                trajectoryConstraints, SAMPLE_DISTANCE
+        );
+
         simplesquare = new Trajectory(
                 new SimplePathBuilder(new Vector2(0,0), Rotation2.ZERO)
                         .lineTo(new Vector2(100,0))
@@ -154,6 +172,14 @@ public class AutonomousTrajectories {
 
     public Trajectory getSimpleSquare() {
         return simplesquare;
+    }
+
+    public Trajectory getAutonTest() {
+        return TwoHundredInchTest;
+    }
+
+    public Trajectory get_sCurve() {
+        return sCurve;
     }
 
     public Trajectory getSquare() {

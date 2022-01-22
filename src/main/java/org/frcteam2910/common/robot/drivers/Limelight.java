@@ -7,6 +7,8 @@ import org.frcteam2910.common.math.MathUtils;
 import org.frcteam2910.common.math.Vector2;
 
 public final class Limelight {
+
+
     private final NetworkTable table;
 
     private final NetworkTableEntry tv;
@@ -25,6 +27,13 @@ public final class Limelight {
     private final NetworkTableEntry stream;
     private final NetworkTableEntry snapshot;
 
+
+    private final static Limelight INSTANCE = new Limelight();
+
+    public static Limelight getInstance(){
+        return INSTANCE;
+    }
+      
     /**
      * Creates an instance of the Limelight, assuming the name is "limelight".
      */
@@ -79,6 +88,10 @@ public final class Limelight {
      */
     public double getTargetArea() {
         return ta.getDouble(0);
+    }
+
+    public double getTargetHorizOffset(){
+        return tx.getDouble(0);
     }
 
     /**

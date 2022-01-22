@@ -4,6 +4,10 @@ import java.io.IOException;
 
 import org.frcteam2910.c2020.commands.BasicDriveCommand;
 import org.frcteam2910.c2020.commands.DriveCommand;
+import org.frcteam2910.c2020.commands.DriveWithSetRotationCommand;
+import org.frcteam2910.c2020.commands.DriveWithSetRotationMP;
+import org.frcteam2910.c2020.commands.SetToJoysticks;
+import org.frcteam2910.c2020.commands.SetToLimeLightTrack;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2020.util.AutonomousChooser;
 import org.frcteam2910.c2020.util.AutonomousTrajectories;
@@ -13,6 +17,8 @@ import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.input.Axis;
 import org.frcteam2910.common.robot.input.XboxController;
 
+import edu.wpi.first.wpilibj.command.InstantCommand;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -24,7 +30,7 @@ public class RobotContainer {
     private AutonomousTrajectories autonomousTrajectories;
     private final AutonomousChooser autonomousChooser;
 
-    private final DriverReadout driverReadout;
+    //private final DriverReadout driverReadout;
 
     public RobotContainer() {
         try {
@@ -35,15 +41,18 @@ public class RobotContainer {
         }
         autonomousChooser = new AutonomousChooser(autonomousTrajectories);
 
-        primaryController.getLeftXAxis().setInverted(true);
-        primaryController.getRightXAxis().setInverted(true);
+        drivetrainSubsystem.setController(primaryController);
 
-        CommandScheduler.getInstance().registerSubsystem(drivetrainSubsystem);
+        //CommandScheduler.getInstance().registerSubsystem(drivetrainSubsystem);
+        
+        //input from controller
+        //CommandScheduler.getInstance().setDefaultCommand(drivetrainSubsystem, new DriveCommand(drivetrainSubsystem, getDriveForwardAxis(), getDriveStrafeAxis(), getDriveRotationAxis()));
 
-        CommandScheduler.getInstance().setDefaultCommand(drivetrainSubsystem, new DriveCommand(drivetrainSubsystem, getDriveForwardAxis(), getDriveStrafeAxis(), getDriveRotationAxis()));
+        //input froom control and Limelight
+        //CommandScheduler.getInstance().setDefaultCommand(drivetrainSubsystem, new DriveWithSetRotationCommand(drivetrainSubsystem, getDriveForwardAxis(), getDriveStrafeAxis(), 30));
 
-        driverReadout = new DriverReadout(this);
-        driverReadout.getSelectedLoadingBay();
+         //driverReadout = new DriverReadout(this);
+         //driverReadout.getSelectedLoadingBay();
 
         configureButtonBindings();
     }
@@ -56,6 +65,16 @@ public class RobotContainer {
         primaryController.getAButton().whenPressed(
                 new BasicDriveCommand(drivetrainSubsystem, new Vector2(-0.5, 0.0), 0.0, false).withTimeout(0.3)
         );
+
+        primaryController.getRightBumperButton().whenPressed(
+                new SetToLimeLightTrack(drivetrainSubsystem)
+        );
+
+        primaryController.getLeftBumperButton().whenPressed(
+                new SetToJoysticks(drivetrainSubsystem)
+        );
+
+        SmartDashboard.putData("Change rotation to 90", new DriveWithSetRotationMP(drivetrainSubsystem, Math.PI/2));
 
         // Manual hood adjustment
 //        primaryController.getDPadButton(DPadButton.Direction.DOWN).whenPressed(
@@ -78,17 +97,17 @@ public class RobotContainer {
         return autonomousChooser.getCommand(this);
     }
 
-    private Axis getDriveForwardAxis() {
-        return primaryController.getLeftYAxis();
-    }
+    // private Axis getDriveForwardAxis() {
+    //     return primaryController.getLeftYAxis();
+    // }
 
-    private Axis getDriveStrafeAxis() {
-        return primaryController.getLeftXAxis();
-    }
+    // private Axis getDriveStrafeAxis() {
+    //     return primaryController.getLeftXAxis();
+    // }
 
-    private Axis getDriveRotationAxis() {
-        return primaryController.getRightXAxis();
-    }
+    // private Axis getDriveRotationAxis() {
+    //     return primaryController.getRightXAxis();
+    // }
 
     public DrivetrainSubsystem getDrivetrainSubsystem() {
         return drivetrainSubsystem;

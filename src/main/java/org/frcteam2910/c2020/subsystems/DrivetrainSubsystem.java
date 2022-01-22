@@ -8,11 +8,13 @@ import com.swervedrivespecialties.swervelib.SwerveModule;
 
 import org.frcteam2910.c2020.Constants;
 import org.frcteam2910.c2020.Pigeon;
+import org.frcteam2910.c2020.commands.DriveWithSetRotationCommand;
 import org.frcteam2910.common.control.CentripetalAccelerationConstraint;
 import org.frcteam2910.common.control.FeedforwardConstraint;
 import org.frcteam2910.common.control.HolonomicMotionProfiledTrajectoryFollower;
 import org.frcteam2910.common.control.MaxAccelerationConstraint;
 import org.frcteam2910.common.control.PidConstants;
+import org.frcteam2910.common.control.PidController;
 import org.frcteam2910.common.control.TrajectoryConstraint;
 import org.frcteam2910.common.drivers.Gyroscope;
 import org.frcteam2910.common.kinematics.ChassisVelocity;
@@ -22,17 +24,26 @@ import org.frcteam2910.common.math.RigidTransform2;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.UpdateManager;
+import org.frcteam2910.common.robot.drivers.Limelight;
 import org.frcteam2910.common.util.DrivetrainFeedforwardConstants;
 import org.frcteam2910.common.util.HolonomicDriveSignal;
 import org.frcteam2910.common.util.HolonomicFeedforward;
 import org.frcteam2910.common.util.InterpolatingDouble;
 import org.frcteam2910.common.util.InterpolatingTreeMap;
 
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.RobotController;
+
+import org.frcteam2910.common.robot.input.Axis;
+import org.frcteam2910.common.robot.input.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 
 
@@ -40,6 +51,17 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     public static final double TRACKWIDTH = 0.34;
     public static final double WHEELBASE = 0.34;
     public static final double WHEEL_DIAMETER_INCHES = 3.64;  // Actual is 3.89"
+    public TrapezoidProfile.Constraints constraints = new Constraints(6.0, 6.0);
+
+    public ProfiledPIDController rotationController = new ProfiledPIDController(1.2, 0.03, 0.02, constraints, 0.02);
+    public PIDController limelightController = new PIDController(1.7, 0.03, 0.02, 0.02);
+    
+
+    public enum DriveControlMode{
+        JOYSTICKS, ROTATION, TRAJECTORY, LIMELIGHT,
+    }
+
+    private DriveControlMode driveControlMode = DriveControlMode.JOYSTICKS;
 
     public static final DrivetrainFeedforwardConstants FEEDFORWARD_CONSTANTS = new DrivetrainFeedforwardConstants(
             0.042746,
@@ -103,6 +125,8 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     private final NetworkTableEntry odometryXEntry;
     private final NetworkTableEntry odometryYEntry;
     private final NetworkTableEntry odometryAngleEntry;
+
+    private XboxController primaryController;
 
     public DrivetrainSubsystem() {
         synchronized (sensorLock) {
@@ -199,6 +223,89 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         tab.addNumber("Average Velocity", this::getAverageAbsoluteValueVelocity);
     }
 
+    public void setController(XboxController controller){
+        primaryController = controller;
+    }
+
+    private Axis getDriveForwardAxis() {
+        return primaryController.getLeftYAxis();
+    }
+
+    private Axis getDriveStrafeAxis() {
+        return primaryController.getLeftXAxis();
+    }
+
+    private Axis getDriveRotationAxis() {
+        return primaryController.getRightXAxis();
+    }
+
+    public synchronized DriveControlMode getControlMode() {
+        return driveControlMode;
+    }
+
+    public synchronized void setControlMode(DriveControlMode controlMode) {
+        this.driveControlMode = controlMode;
+    }
+
+
+    public void joystickDrive(){
+        //System.out.println("JOYSTICKS");
+    
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), true);
+    }
+
+    public void setRotationTarget(double goal){
+        rotationController.enableContinuousInput(0.0, Math.PI*2);
+        rotationController.reset(getPose().rotation.toRadians());
+        rotationController.setGoal(goal + getPose().rotation.toRadians());
+        rotationController.setTolerance(0.087);
+        setControlMode(DriveControlMode.ROTATION);
+    }
+
+    public boolean atRotationTarget(){
+        
+        if(rotationController.atGoal()){
+            System.out.println("Reached target");
+        }
+        return rotationController.atGoal();
+    }
+
+    public void rotationDrive(){
+        //Limelight limelight = Limelight.getInstance();
+        
+
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        double rotationOutput = rotationController.calculate(getPose().rotation.toRadians());
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
+        System.out.println("output = " + rotationOutput + ", current = " + getPose().rotation.toRadians());
+    }
+
+    public void setLimelightTarget(){
+        limelightController.enableContinuousInput(0.0, Math.PI*2);
+        //limelightController.setSetpoint(goal + getPose().rotation.toRadians());
+        //limelightController.setTolerance(0.087);
+        setControlMode(DriveControlMode.LIMELIGHT);
+    }
+
+    public void limelightDrive(){
+        Limelight limelight = Limelight.getInstance();
+        limelightController.setSetpoint(Math.toRadians(-limelight.getTargetHorizOffset()) + getPose().rotation.toRadians());
+
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        double rotationOutput = limelightController.calculate(getPose().rotation.toRadians());
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
+        System.out.println("output = " + rotationOutput + ", current = " + getPose().rotation.toRadians());
+    }
+
     public RigidTransform2 getPose() {
         synchronized (kinematicsLock) {
             return pose;
@@ -237,6 +344,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
             );
         }
     }
+
 
     public double getAverageAbsoluteValueVelocity() {
         double averageVelocity = 0;
@@ -312,37 +420,61 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     public void update(double time, double dt) {
         updateOdometry(time, dt);
 
-        HolonomicDriveSignal driveSignal;
-        Optional<HolonomicDriveSignal> trajectorySignal = follower.update(
-                getPose(),
-                getVelocity(),
-                getAngularVelocity(),
-                time,
-                dt
-        );
-        if (trajectorySignal.isPresent()) {
-            driveSignal = trajectorySignal.get();
-            driveSignal = new HolonomicDriveSignal(
-                    driveSignal.getTranslation().scale(1.0 / RobotController.getBatteryVoltage()),
-                    driveSignal.getRotation() / RobotController.getBatteryVoltage(),
-                    driveSignal.isFieldOriented()
-            );
-        } else {
-            synchronized (stateLock) {
-                driveSignal = this.driveSignal;
-            }
-        }
+        DriveControlMode i_controlMode = getControlMode();
 
-        updateModules(driveSignal, dt);
+        HolonomicDriveSignal currentDriveSignal = null;
+
+        switch(i_controlMode){
+            case JOYSTICKS:
+                joystickDrive();
+                synchronized (stateLock) {
+                    currentDriveSignal = this.driveSignal;
+                }
+                break;
+            case ROTATION:
+                rotationDrive();
+                synchronized (stateLock) {
+                    currentDriveSignal = this.driveSignal;
+                }
+                break;
+            case LIMELIGHT:
+                limelightDrive();
+                synchronized (stateLock) {
+                    currentDriveSignal = this.driveSignal;
+                }
+                break;
+            case TRAJECTORY:
+                Optional<HolonomicDriveSignal> trajectorySignal = follower.update(
+                        getPose(),
+                        getVelocity(),
+                        getAngularVelocity(),
+                        time,
+                        dt
+                );
+                if (trajectorySignal.isPresent()) {
+                    currentDriveSignal = trajectorySignal.get();
+                    currentDriveSignal = new HolonomicDriveSignal(
+                        currentDriveSignal.getTranslation().scale(1.0 / RobotController.getBatteryVoltage()),
+                        currentDriveSignal.getRotation() / RobotController.getBatteryVoltage(),
+                        currentDriveSignal.isFieldOriented()
+                    );
+                }
+                break; 
+        }
+       // System.out.println("output = " + currentDriveSignal.getRotation() + ", current = " + getPose().rotation.toRadians());
+        updateModules(currentDriveSignal, dt);
+        SmartDashboard.putNumber("Angle", getPose().rotation.toDegrees());
     }
 
     @Override
     public void periodic() {
+        SmartDashboard.putNumber("Angle rate", getAngularVelocity());
         RigidTransform2 pose = getPose();
         odometryXEntry.setDouble(pose.translation.x);
         odometryYEntry.setDouble(pose.translation.y);
         odometryAngleEntry.setDouble(getPose().rotation.toDegrees());
     }
+    
 
     public HolonomicMotionProfiledTrajectoryFollower getFollower() {
         return follower;

@@ -23,6 +23,8 @@ public class AutonomousChooser {
         autonomousModeChooser.addOption("6 Ball Compatible", AutonomousMode.EIGHT_BALL_COMPATIBLE);
         autonomousModeChooser.addOption("Simple Shoot Three", AutonomousMode.SIMPLE_SHOOT_THREE);
         autonomousModeChooser.addOption("Simple Square", AutonomousMode.SIMPLE_SQUARE);
+        autonomousModeChooser.addOption("200 inch test", AutonomousMode.AUTON_TEST);
+        autonomousModeChooser.addOption("sCurve", AutonomousMode.S_CURVE);
     }
 
     public SendableChooser<AutonomousMode> getAutonomousModeChooser() {
@@ -59,6 +61,8 @@ public class AutonomousChooser {
 
         //reset robot pose
         resetRobotPose(command, container, trajectories.getSimpleSquare());
+
+        follow(command, container, trajectories.getSimpleSquare());
         //follow first trajectory and shoot
         //follow second trajectory and shoot
  
@@ -67,6 +71,31 @@ public class AutonomousChooser {
 
         return command;
     }
+
+    private Command getTwoHundredInches(RobotContainer container) {
+        SequentialCommandGroup command = new SequentialCommandGroup();
+
+        
+        resetRobotPose(command, container, trajectories.getAutonTest());
+
+        follow(command, container, trajectories.getAutonTest());
+        
+
+        return command;
+    }
+
+    private Command getsCurve(RobotContainer container) {
+        SequentialCommandGroup command = new SequentialCommandGroup();
+
+        
+        resetRobotPose(command, container, trajectories.get_sCurve());
+
+        follow(command, container, trajectories.get_sCurve());
+        
+
+        return command;
+    }
+
 
     private Command getSquareCommand(RobotContainer container) {
         SequentialCommandGroup command = new SequentialCommandGroup();
@@ -128,7 +157,11 @@ public class AutonomousChooser {
             case SIMPLE_SHOOT_THREE:
                 return getSimpleShootThreeAutoCommand(container);
             case SIMPLE_SQUARE:
-                return getSimpleSquareCommand(container);    
+                return getSimpleSquareCommand(container);   
+            case AUTON_TEST:
+                return getTwoHundredInches(container); 
+            case S_CURVE:
+                return getsCurve(container);
         }
 
         return get10BallAutoCommand(container);
@@ -151,5 +184,7 @@ public class AutonomousChooser {
         TEN_BALL_CIRCUIT,
         SIMPLE_SHOOT_THREE,
         SIMPLE_SQUARE,
+        AUTON_TEST,
+        S_CURVE,
     }
 }

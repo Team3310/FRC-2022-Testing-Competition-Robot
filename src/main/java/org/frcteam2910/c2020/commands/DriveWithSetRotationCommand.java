@@ -1,5 +1,6 @@
 package org.frcteam2910.c2020.commands;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.common.control.PidConstants;
@@ -36,6 +37,7 @@ public class DriveWithSetRotationCommand extends CommandBase {
     @Override
     public void execute() {
         double rotationOutput = rotationController.calculate(drivetrain.getPose().rotation.toRadians(), 0.02);
+        SmartDashboard.putNumber("rotation output", rotationOutput);
         drivetrain.drive(new Vector2(forward.get(true), strafe.get(true)), rotationOutput, true);
     }
 
