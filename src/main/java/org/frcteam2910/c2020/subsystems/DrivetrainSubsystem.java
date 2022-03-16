@@ -8,6 +8,7 @@ import com.swervedrivespecialties.swervelib.SwerveModule;
 
 import org.frcteam2910.c2020.Constants;
 import org.frcteam2910.c2020.Pigeon;
+import org.frcteam2910.c2020.RobotContainer;
 import org.frcteam2910.c2020.commands.DriveWithSetRotationCommand;
 import org.frcteam2910.common.control.CentripetalAccelerationConstraint;
 import org.frcteam2910.common.control.FeedforwardConstraint;
@@ -25,6 +26,7 @@ import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
 import org.frcteam2910.common.robot.UpdateManager;
 import org.frcteam2910.common.robot.drivers.Limelight;
+import org.frcteam2910.common.util.BallColor;
 import org.frcteam2910.common.util.DrivetrainFeedforwardConstants;
 import org.frcteam2910.common.util.HolonomicDriveSignal;
 import org.frcteam2910.common.util.HolonomicFeedforward;
@@ -58,7 +60,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     
 
     public enum DriveControlMode{
-        JOYSTICKS, ROTATION, TRAJECTORY, LIMELIGHT,
+        JOYSTICKS, ROTATION, TRAJECTORY, LIMELIGHT, BALL_TRACKING
     }
 
     private DriveControlMode driveControlMode = DriveControlMode.JOYSTICKS;
@@ -137,8 +139,8 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
 
         SwerveModule frontLeftModule = Mk3SwerveModuleHelper.createFalcon500(
                 tab.getLayout("Front Left Module", BuiltInLayouts.kList)
-                        .withPosition(2, 0)
-                        .withSize(2, 4),
+                        .withPosition(0, 0)
+                        .withSize(2, 3),
                 Mk3SwerveModuleHelper.GearRatio.STANDARD,
                 Constants.DRIVETRAIN_FRONT_LEFT_DRIVE_MOTOR,
                 Constants.DRIVETRAIN_FRONT_LEFT_ANGLE_MOTOR,
@@ -147,8 +149,8 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         );
         SwerveModule frontRightModule = Mk3SwerveModuleHelper.createFalcon500(
                 tab.getLayout("Front Right Module", BuiltInLayouts.kList)
-                        .withPosition(4, 0)
-                        .withSize(2, 4),
+                        .withPosition(2, 0)
+                        .withSize(2, 3),
                 Mk3SwerveModuleHelper.GearRatio.STANDARD,
                 Constants.DRIVETRAIN_FRONT_RIGHT_DRIVE_MOTOR,
                 Constants.DRIVETRAIN_FRONT_RIGHT_ANGLE_MOTOR,
@@ -157,8 +159,8 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         );
         SwerveModule backLeftModule = Mk3SwerveModuleHelper.createFalcon500(
                 tab.getLayout("Back Left Module", BuiltInLayouts.kList)
-                        .withPosition(6, 0)
-                        .withSize(2, 4),
+                        .withPosition(4, 0)
+                        .withSize(2, 3),
                 Mk3SwerveModuleHelper.GearRatio.STANDARD,
                 Constants.DRIVETRAIN_BACK_LEFT_DRIVE_MOTOR,
                 Constants.DRIVETRAIN_BACK_LEFT_ANGLE_MOTOR,
@@ -167,8 +169,8 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         );
         SwerveModule backRightModule = Mk3SwerveModuleHelper.createFalcon500(
                 tab.getLayout("Back Right Module", BuiltInLayouts.kList)
-                        .withPosition(8, 0)
-                        .withSize(2, 4),
+                        .withPosition(6, 0)
+                        .withSize(2, 3),
                 Mk3SwerveModuleHelper.GearRatio.STANDARD,
                 Constants.DRIVETRAIN_BACK_RIGHT_DRIVE_MOTOR,
                 Constants.DRIVETRAIN_BACK_RIGHT_ANGLE_MOTOR,
@@ -179,15 +181,15 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         modules = new SwerveModule[]{frontLeftModule, frontRightModule, backLeftModule, backRightModule};
 
         odometryXEntry = tab.add("X", 0.0)
-                .withPosition(0, 0)
+                .withPosition(0, 3)
                 .withSize(1, 1)
                 .getEntry();
         odometryYEntry = tab.add("Y", 0.0)
-                .withPosition(0, 1)
+                .withPosition(1, 3)
                 .withSize(1, 1)
                 .getEntry();
         odometryAngleEntry = tab.add("Angle", 0.0)
-                .withPosition(0, 2)
+                .withPosition(2, 3)
                 .withSize(1, 1)
                 .getEntry();
         tab.addNumber("Trajectory X", () -> {
@@ -196,7 +198,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
                     }
                     return follower.getLastState().getPathState().getPosition().x;
                 })
-                .withPosition(1, 0)
+                .withPosition(0, 4)
                 .withSize(1, 1);
         tab.addNumber("Trajectory Y", () -> {
                     if (follower.getLastState() == null) {
@@ -204,23 +206,27 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
                     }
                     return follower.getLastState().getPathState().getPosition().y;
                 })
-                .withPosition(1, 1)
+                .withPosition(1, 4)
                 .withSize(1, 1);
 
         tab.addNumber("Rotation Voltage", () -> {
-            HolonomicDriveSignal signal;
-            synchronized (stateLock) {
-                signal = driveSignal;
-            }
+                HolonomicDriveSignal signal;
+                synchronized (stateLock) {
+                    signal = driveSignal;
+                }
 
-            if (signal == null) {
-                return 0.0;
-            }
+                if (signal == null) {
+                    return 0.0;
+                }
 
-            return signal.getRotation() * RobotController.getBatteryVoltage();
-        });
+                return signal.getRotation() * RobotController.getBatteryVoltage();
+            })
+            .withPosition(2, 4)
+            .withSize(1, 1);
 
-        tab.addNumber("Average Velocity", this::getAverageAbsoluteValueVelocity);
+        tab.addNumber("Average Velocity", this::getAverageAbsoluteValueVelocity)
+            .withPosition(3, 4)
+            .withSize(1, 1);
     }
 
     public void setController(XboxController controller){
@@ -248,9 +254,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     }
 
 
-    public void joystickDrive(){
-        //System.out.println("JOYSTICKS");
-    
+    public void joystickDrive() {    
         primaryController.getLeftXAxis().setInverted(true);
         primaryController.getRightXAxis().setInverted(true);
 
@@ -274,24 +278,20 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     }
 
     public void rotationDrive(){
-        //Limelight limelight = Limelight.getInstance();
-        
-
         primaryController.getLeftXAxis().setInverted(true);
         primaryController.getRightXAxis().setInverted(true);
 
         double rotationOutput = rotationController.calculate(getPose().rotation.toRadians());
 
         drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
-        System.out.println("output = " + rotationOutput + ", current = " + getPose().rotation.toRadians());
     }
 
-    public void setLimelightTarget(){
-        limelightController.enableContinuousInput(0.0, Math.PI*2);
-        //limelightController.setSetpoint(goal + getPose().rotation.toRadians());
-        //limelightController.setTolerance(0.087);
-        setControlMode(DriveControlMode.LIMELIGHT);
-    }
+    // public void setLimelightTarget(){
+    //     limelightController.enableContinuousInput(0.0, Math.PI*2);
+    //     //limelightController.setSetpoint(goal + getPose().rotation.toRadians());
+    //     //limelightController.setTolerance(0.087);
+    //     setControlMode(DriveControlMode.LIMELIGHT);
+    // }
 
     public void limelightDrive(){
         Limelight limelight = Limelight.getInstance();
@@ -303,7 +303,20 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         double rotationOutput = limelightController.calculate(getPose().rotation.toRadians());
 
         drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
-        System.out.println("output = " + rotationOutput + ", current = " + getPose().rotation.toRadians());
+    }
+
+    public void ballTrackDrive(){
+        Limelight limelight = Limelight.getInstance();
+        // Pipeline 0 on limelight is red (currently, at least)
+        limelight.setPipeline(RobotContainer.getInstance().getSelectedBall() == BallColor.BLUE ? 1 : 0);
+        limelightController.setSetpoint(Math.toRadians(-limelight.getTargetHorizOffset()) + getPose().rotation.toRadians());
+
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        double rotationOutput = limelightController.calculate(getPose().rotation.toRadians());
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
     }
 
     public RigidTransform2 getPose() {
@@ -439,6 +452,12 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
                 break;
             case LIMELIGHT:
                 limelightDrive();
+                synchronized (stateLock) {
+                    currentDriveSignal = this.driveSignal;
+                }
+                break;
+            case BALL_TRACKING:
+                ballTrackDrive();
                 synchronized (stateLock) {
                     currentDriveSignal = this.driveSignal;
                 }

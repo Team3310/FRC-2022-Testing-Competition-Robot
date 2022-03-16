@@ -3,24 +3,20 @@ package org.frcteam2910.c2020;
 import java.io.IOException;
 
 import org.frcteam2910.c2020.commands.BasicDriveCommand;
-import org.frcteam2910.c2020.commands.DriveCommand;
-import org.frcteam2910.c2020.commands.DriveWithSetRotationCommand;
 import org.frcteam2910.c2020.commands.DriveWithSetRotationMP;
+import org.frcteam2910.c2020.commands.SetToBallTrack;
 import org.frcteam2910.c2020.commands.SetToJoysticks;
-import org.frcteam2910.c2020.commands.SetToLimeLightTrack;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2020.util.AutonomousChooser;
 import org.frcteam2910.c2020.util.AutonomousTrajectories;
 import org.frcteam2910.c2020.util.DriverReadout;
 import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.math.Vector2;
-import org.frcteam2910.common.robot.input.Axis;
 import org.frcteam2910.common.robot.input.XboxController;
+import org.frcteam2910.common.util.BallColor;
 
-import edu.wpi.first.wpilibj.command.InstantCommand;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 public class RobotContainer {
     private final XboxController primaryController = new XboxController(Constants.PRIMARY_CONTROLLER_PORT);
@@ -30,7 +26,8 @@ public class RobotContainer {
     private AutonomousTrajectories autonomousTrajectories;
     private final AutonomousChooser autonomousChooser;
 
-    //private final DriverReadout driverReadout;
+    private final DriverReadout driverReadout;
+    private static RobotContainer instance;
 
     public RobotContainer() {
         try {
@@ -51,10 +48,11 @@ public class RobotContainer {
         //input froom control and Limelight
         //CommandScheduler.getInstance().setDefaultCommand(drivetrainSubsystem, new DriveWithSetRotationCommand(drivetrainSubsystem, getDriveForwardAxis(), getDriveStrafeAxis(), 30));
 
-         //driverReadout = new DriverReadout(this);
-         //driverReadout.getSelectedLoadingBay();
+        driverReadout = new DriverReadout(this);
 
         configureButtonBindings();
+
+        instance = this;
     }
 
     private void configureButtonBindings() {
@@ -67,7 +65,7 @@ public class RobotContainer {
         );
 
         primaryController.getRightBumperButton().whenPressed(
-                new SetToLimeLightTrack(drivetrainSubsystem)
+                new SetToBallTrack(drivetrainSubsystem)
         );
 
         primaryController.getLeftBumperButton().whenPressed(
@@ -119,5 +117,13 @@ public class RobotContainer {
 
     public AutonomousChooser getAutonomousChooser() {
         return autonomousChooser;
+    }
+
+    public BallColor getSelectedBall() {
+        return driverReadout.getSelectedBallColor();
+    }
+
+    public static RobotContainer getInstance() {
+        return instance;
     }
 }

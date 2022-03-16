@@ -4,34 +4,28 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem.DriveControlMode;
 
-public class DriveWithSetRotationMP extends CommandBase {
+public class SetToBallTrack extends CommandBase {
     private final DrivetrainSubsystem drivetrain;
-    private double rotationTarget;
 
 
-    public DriveWithSetRotationMP(DrivetrainSubsystem drivetrain, double rotationTarget) {
+    public SetToBallTrack(DrivetrainSubsystem drivetrain) {
         this.drivetrain = drivetrain;
-        this.rotationTarget = rotationTarget;
 
         addRequirements(drivetrain);
     }
 
     @Override
     public void initialize() {
-
-        drivetrain.setRotationTarget(rotationTarget);
+        drivetrain.setControlMode(DriveControlMode.BALL_TRACKING);
     }
 
     @Override
     public void execute() {}
 
-    @Override
-    public boolean isFinished(){
-        return drivetrain.atRotationTarget();
-    }
 
     @Override
-    public void end(boolean interrupted) {
-        drivetrain.setControlMode(DriveControlMode.JOYSTICKS);
-    }
+    public boolean isFinished() {return true;}
+
+    @Override
+    public void end(boolean interrupted) {}
 }

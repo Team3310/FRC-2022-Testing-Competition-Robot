@@ -3,7 +3,7 @@ package org.frcteam2910.c2020.util;
 import org.frcteam2910.c2020.RobotContainer;
 import org.frcteam2910.c2020.subsystems.DrivetrainSubsystem;
 import org.frcteam2910.common.math.Rotation2;
-import org.frcteam2910.common.util.Side;
+import org.frcteam2910.common.util.BallColor;
 
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -11,28 +11,28 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 public class DriverReadout {
-    private final SendableChooser<Side> loadingBayChooser = new SendableChooser<>();
+    private final SendableChooser<BallColor> ballColorChooser = new SendableChooser<>();
 
     public DriverReadout(RobotContainer container) {
         ShuffleboardTab tab = Shuffleboard.getTab("Driver Readout");
 
-        loadingBayChooser.setDefaultOption("Left", Side.LEFT);
-        loadingBayChooser.addOption("Right", Side.RIGHT);
+        ballColorChooser.setDefaultOption("Red", BallColor.RED);
+        ballColorChooser.addOption("Blue", BallColor.BLUE);
 
         tab.add("Autonomous Mode", container.getAutonomousChooser().getAutonomousModeChooser())
                 .withSize(2, 1)
-                .withPosition(2, 0);
-        tab.add("Loading Station Bay", loadingBayChooser)
+                .withPosition(0, 0);
+        tab.add("Ball Color for Tracking", ballColorChooser)
                 .withSize(2, 1)
-                .withPosition(2, 1);
+                .withPosition(2, 0);
 
         tab.add("Zero Gyroscope", new ZeroGyroscope(container.getDrivetrainSubsystem()))
                 .withSize(2, 1)
-                .withPosition(4, 0);
+                .withPosition(0, 1);
     }
 
-    public Side getSelectedLoadingBay() {
-        return loadingBayChooser.getSelected();
+    public BallColor getSelectedBallColor() {
+        return ballColorChooser.getSelected();
     }
 
     private static class ZeroGyroscope extends CommandBase {
