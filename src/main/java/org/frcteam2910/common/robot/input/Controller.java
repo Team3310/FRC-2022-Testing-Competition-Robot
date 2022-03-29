@@ -1,5 +1,6 @@
 package org.frcteam2910.common.robot.input;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.button.Button;
 
 /**
@@ -9,7 +10,11 @@ import edu.wpi.first.wpilibj2.command.button.Button;
  * @see XboxController
  * @since 1.0
  */
-public abstract class Controller {
+public abstract class Controller extends GenericHID {
+	public Controller(int port) {
+		super(port);
+	}
+
 	public abstract Axis getLeftTriggerAxis();
 
 	public abstract Axis getLeftXAxis();

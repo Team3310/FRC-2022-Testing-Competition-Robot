@@ -13,6 +13,7 @@ import org.frcteam2910.common.math.Rotation2;
 import org.frcteam2910.common.robot.UpdateManager;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -191,11 +192,25 @@ public class Robot extends TimedRobot {
     }
 
     @Override
+    public void disabledInit() {
+        
+        robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 0);
+        robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 0);
+    }
+
+    @Override
     public void disabledPeriodic() {
         //robotContainer.getVisionSubsystem().setLedMode(Limelight.LedMode.OFF);
     }
 
     @Override
     public void teleopInit() {
+    }
+
+    @Override
+    public void teleopPeriodic() {
+        
+        robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 1);
+        robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 1);
     }
 }
