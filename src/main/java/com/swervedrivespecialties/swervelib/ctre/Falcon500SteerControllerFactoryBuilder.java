@@ -156,6 +156,7 @@ public final class Falcon500SteerControllerFactoryBuilder {
         private final TalonFXControlMode motorControlMode;
         private final AbsoluteEncoder absoluteEncoder;
 
+        private int resetEncoderIterations = ENCODER_RESET_ITERATIONS;
         private double referenceAngleRadians = 0.0;
 
         private double resetIteration = 0;
@@ -184,8 +185,8 @@ public final class Falcon500SteerControllerFactoryBuilder {
             // Reset the NEO's encoder periodically when the module is not rotating.
             // Sometimes (~5% of the time) when we initialize, the absolute encoder isn't fully set up, and we don't
             // end up getting a good reading. If we reset periodically this won't matter anymore.
-            if (motor.getSelectedSensorVelocity() * motorEncoderVelocityCoefficient < ENCODER_RESET_MAX_ANGULAR_VELOCITY) {
-                if (++resetIteration >= ENCODER_RESET_ITERATIONS) {
+            if (resetEncoderIterations > 0 && motor.getSelectedSensorVelocity() * motorEncoderVelocityCoefficient < ENCODER_RESET_MAX_ANGULAR_VELOCITY) {
+                if (++resetIteration >= resetEncoderIterations) {
                     resetIteration = 0;
                     double absoluteAngle = absoluteEncoder.getAbsoluteAngle();
                     motor.setSelectedSensorPosition(absoluteAngle / motorEncoderPositionCoefficient);
@@ -223,6 +224,17 @@ public final class Falcon500SteerControllerFactoryBuilder {
             }
 
             return motorAngleRadians;
+        }
+
+        @Override
+        public void resetAbsoluteSteerAngle() {
+            motor.setSelectedSensorPosition(absoluteEncoder.getAbsoluteAngle() / motorEncoderPositionCoefficient);
+        }
+
+
+        @Override
+        public void setEncoderAutoResetIterations(int iterations) {
+            resetEncoderIterations = iterations;
         }
     }
 }

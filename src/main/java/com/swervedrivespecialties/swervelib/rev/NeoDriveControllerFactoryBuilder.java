@@ -9,6 +9,8 @@ import com.swervedrivespecialties.swervelib.ModuleConfiguration;
 
 import static com.swervedrivespecialties.swervelib.rev.RevUtils.checkNeoError;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+
 public final class NeoDriveControllerFactoryBuilder {
     private double nominalVoltage = Double.NaN;
     private double currentLimit = Double.NaN;
@@ -69,6 +71,7 @@ public final class NeoDriveControllerFactoryBuilder {
     private static class ControllerImplementation implements DriveController {
         private final CANSparkMax motor;
         private final RelativeEncoder encoder;
+        private NeutralMode motorNeutralMode = NeutralMode.Brake;
 
         private ControllerImplementation(CANSparkMax motor, RelativeEncoder encoder) {
             this.motor = motor;
@@ -78,6 +81,11 @@ public final class NeoDriveControllerFactoryBuilder {
         @Override
         public void setReferenceVoltage(double voltage) {
             motor.setVoltage(voltage);
+        }
+
+        @Override
+        public void setMotorNeutralMode(NeutralMode neutralMode){
+            System.out.println("Switch to falcons - no Neutral mode implementation");
         }
 
         @Override

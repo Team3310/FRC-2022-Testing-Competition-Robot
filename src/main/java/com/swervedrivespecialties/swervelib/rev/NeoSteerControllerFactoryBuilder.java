@@ -115,6 +115,7 @@ public final class NeoSteerControllerFactoryBuilder {
         private final RelativeEncoder motorEncoder;
         private final AbsoluteEncoder absoluteEncoder;
 
+        private int resetEncoderIterations = ENCODER_RESET_ITERATIONS;
         private double referenceAngleRadians = 0;
 
         private double resetIteration = 0;
@@ -138,8 +139,8 @@ public final class NeoSteerControllerFactoryBuilder {
             // Reset the NEO's encoder periodically when the module is not rotating.
             // Sometimes (~5% of the time) when we initialize, the absolute encoder isn't fully set up, and we don't
             // end up getting a good reading. If we reset periodically this won't matter anymore.
-            if (motorEncoder.getVelocity() < ENCODER_RESET_MAX_ANGULAR_VELOCITY) {
-                if (++resetIteration >= ENCODER_RESET_ITERATIONS) {
+            if (resetEncoderIterations > 0 && motorEncoder.getVelocity() < ENCODER_RESET_MAX_ANGULAR_VELOCITY) {
+                if (++resetIteration >= resetEncoderIterations) {
                     resetIteration = 0;
                     double absoluteAngle = absoluteEncoder.getAbsoluteAngle();
                     motorEncoder.setPosition(absoluteAngle);
@@ -164,7 +165,7 @@ public final class NeoSteerControllerFactoryBuilder {
 
             this.referenceAngleRadians = referenceAngleRadians;
 
-            controller.setReference(adjustedReferenceAngleRadians, ControlType.kPosition);
+            controller.setReference(adjustedReferenceAngleRadians, CANSparkMax.ControlType.kPosition);
         }
 
         @Override
@@ -176,6 +177,17 @@ public final class NeoSteerControllerFactoryBuilder {
             }
 
             return motorAngleRadians;
+        }
+
+        @Override
+        public void resetAbsoluteSteerAngle() {
+            motorEncoder.setPosition(absoluteEncoder.getAbsoluteAngle());
+        }
+
+
+        @Override
+        public void setEncoderAutoResetIterations(int iterations) {
+            resetEncoderIterations = iterations;
         }
     }
 }

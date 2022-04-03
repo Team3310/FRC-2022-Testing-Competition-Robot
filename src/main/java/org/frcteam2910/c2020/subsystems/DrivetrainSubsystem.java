@@ -2,6 +2,7 @@ package org.frcteam2910.c2020.subsystems;
 
 import java.util.Optional;
 
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.swervedrivespecialties.swervelib.Mk3SwerveModuleHelper;
 import com.swervedrivespecialties.swervelib.SwerveModule;
@@ -9,13 +10,11 @@ import com.swervedrivespecialties.swervelib.SwerveModule;
 import org.frcteam2910.c2020.Constants;
 import org.frcteam2910.c2020.Pigeon;
 import org.frcteam2910.c2020.RobotContainer;
-import org.frcteam2910.c2020.commands.DriveWithSetRotationCommand;
 import org.frcteam2910.common.control.CentripetalAccelerationConstraint;
 import org.frcteam2910.common.control.FeedforwardConstraint;
 import org.frcteam2910.common.control.HolonomicMotionProfiledTrajectoryFollower;
 import org.frcteam2910.common.control.MaxAccelerationConstraint;
 import org.frcteam2910.common.control.PidConstants;
-import org.frcteam2910.common.control.PidController;
 import org.frcteam2910.common.control.TrajectoryConstraint;
 import org.frcteam2910.common.drivers.Gyroscope;
 import org.frcteam2910.common.kinematics.ChassisVelocity;
@@ -50,6 +49,8 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 
 
 public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
+
+    private static DrivetrainSubsystem instance;
     public static final double TRACKWIDTH = 0.34;
     public static final double WHEELBASE = 0.34;
     public static final double WHEEL_DIAMETER_INCHES = 3.64;  // Actual is 3.89"
@@ -60,7 +61,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     
 
     public enum DriveControlMode{
-        JOYSTICKS, ROTATION, TRAJECTORY, LIMELIGHT, BALL_TRACKING
+        JOYSTICKS, ROBOT_CENTRIC, ROTATION, TRAJECTORY, LIMELIGHT, BALL_TRACKING
     }
 
     private DriveControlMode driveControlMode = DriveControlMode.JOYSTICKS;
@@ -130,7 +131,7 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
 
     private XboxController primaryController;
 
-    public DrivetrainSubsystem() {
+    private DrivetrainSubsystem() {
         synchronized (sensorLock) {
             gyroscope.setInverted(false);
         }
@@ -227,6 +228,15 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         tab.addNumber("Average Velocity", this::getAverageAbsoluteValueVelocity)
             .withPosition(3, 4)
             .withSize(1, 1);
+
+        instance = this;
+    }
+
+    public static DrivetrainSubsystem getInstance() {
+        if(instance == null) {
+            instance = new DrivetrainSubsystem();
+        }
+        return instance;
     }
 
     public void setController(XboxController controller){
@@ -259,6 +269,13 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         primaryController.getRightXAxis().setInverted(true);
 
         drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), true);
+    }
+
+    public void robotCentricDrive() {    
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), false);
     }
 
     public void setRotationTarget(double goal){
@@ -340,6 +357,30 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
     public void drive(Vector2 translationalVelocity, double rotationalVelocity, boolean isFieldOriented) {
         synchronized (stateLock) {
             driveSignal = new HolonomicDriveSignal(translationalVelocity, rotationalVelocity, isFieldOriented);
+        }
+    }
+
+    public void resetSteerAbsoluteAngle() {
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].resetAbsoluteSteerAngle();
+        }
+    }
+
+    public void alignWheels() {
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].set(0,0);
+        }
+    }
+
+    public void setCoast(){
+        for(SwerveModule i : modules){
+            i.setMotorNeutralMode(NeutralMode.Coast);
+        }
+    }
+
+    public void setBrake(){
+        for(SwerveModule i : modules){
+            i.setMotorNeutralMode(NeutralMode.Brake);
         }
     }
 
@@ -440,6 +481,12 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         switch(i_controlMode){
             case JOYSTICKS:
                 joystickDrive();
+                synchronized (stateLock) {
+                    currentDriveSignal = this.driveSignal;
+                }
+                break;
+            case ROBOT_CENTRIC:
+                robotCentricDrive();
                 synchronized (stateLock) {
                     currentDriveSignal = this.driveSignal;
                 }

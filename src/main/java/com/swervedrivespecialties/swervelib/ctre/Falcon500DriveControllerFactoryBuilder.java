@@ -101,6 +101,11 @@ public final class Falcon500DriveControllerFactoryBuilder {
         }
 
         @Override
+        public void setMotorNeutralMode(NeutralMode modeType) {
+            motor.setNeutralMode(modeType);
+        }
+
+        @Override
         public double getStateVelocity() {
             return motor.getSelectedSensorVelocity() * sensorVelocityCoefficient;
         }

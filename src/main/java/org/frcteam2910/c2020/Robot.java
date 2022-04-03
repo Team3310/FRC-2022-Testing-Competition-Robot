@@ -193,7 +193,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void disabledInit() {
-        
+        robotContainer.getDrivetrainSubsystem().alignWheels();
+        robotContainer.getDrivetrainSubsystem().setCoast();
         robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 0);
         robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 0);
     }
@@ -210,7 +211,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         
-        robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 1);
-        robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 1);
+        // robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 1);
+        // robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 1);
     }
 }
