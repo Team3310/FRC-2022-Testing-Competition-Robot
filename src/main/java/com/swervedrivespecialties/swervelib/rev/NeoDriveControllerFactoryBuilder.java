@@ -1,11 +1,13 @@
 package com.swervedrivespecialties.swervelib.rev;
 
-import com.revrobotics.RelativeEncoder;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.RelativeEncoder;
 import com.swervedrivespecialties.swervelib.DriveController;
 import com.swervedrivespecialties.swervelib.DriveControllerFactory;
 import com.swervedrivespecialties.swervelib.ModuleConfiguration;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import static com.swervedrivespecialties.swervelib.rev.RevUtils.checkNeoError;
 
@@ -77,6 +79,12 @@ public final class NeoDriveControllerFactoryBuilder {
             this.motor = motor;
             this.encoder = encoder;
         }
+
+        @Override
+        public void setVoltageRamp(double rampTime) {
+
+        }
+
 
         @Override
         public void setReferenceVoltage(double voltage) {

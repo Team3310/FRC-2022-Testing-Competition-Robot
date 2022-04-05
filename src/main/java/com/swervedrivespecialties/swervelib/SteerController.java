@@ -6,7 +6,7 @@ public interface SteerController {
     void setReferenceAngle(double referenceAngleRadians);
 
     double getStateAngle();
-    
+
     void resetAbsoluteSteerAngle();
 
     void setEncoderAutoResetIterations(int iterations);

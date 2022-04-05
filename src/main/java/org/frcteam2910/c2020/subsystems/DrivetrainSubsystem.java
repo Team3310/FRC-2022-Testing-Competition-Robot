@@ -271,13 +271,6 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), true);
     }
 
-    public void robotCentricDrive() {    
-        primaryController.getLeftXAxis().setInverted(true);
-        primaryController.getRightXAxis().setInverted(true);
-
-        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), false);
-    }
-
     public void setRotationTarget(double goal){
         rotationController.enableContinuousInput(0.0, Math.PI*2);
         rotationController.reset(getPose().rotation.toRadians());
@@ -301,6 +294,13 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         double rotationOutput = rotationController.calculate(getPose().rotation.toRadians());
 
         drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), rotationOutput, true);
+    }
+    
+    public void robotCentricDrive(){
+        primaryController.getLeftXAxis().setInverted(true);
+        primaryController.getRightXAxis().setInverted(true);
+
+        drive(new Vector2(getDriveForwardAxis().get(true), getDriveStrafeAxis().get(true)), getDriveRotationAxis().get(true), false);
     }
 
     // public void setLimelightTarget(){
@@ -360,9 +360,18 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         }
     }
 
-    public void resetSteerAbsoluteAngle() {
-        for (int i = 0; i < modules.length; i++) {
-            modules[i].resetAbsoluteSteerAngle();
+    public void resetPose(RigidTransform2 pose) {
+        synchronized (kinematicsLock) {
+            this.pose = pose;
+            swerveOdometry.resetPose(pose);
+        }
+    }
+
+    public void resetGyroAngle(Rotation2 angle) {
+        synchronized (sensorLock) {
+            gyroscope.setAdjustmentAngle(
+                    gyroscope.getUnadjustedAngle().rotateBy(angle.inverse())
+            );
         }
     }
 
@@ -384,21 +393,11 @@ public class DrivetrainSubsystem implements Subsystem, UpdateManager.Updatable {
         }
     }
 
-    public void resetPose(RigidTransform2 pose) {
-        synchronized (kinematicsLock) {
-            this.pose = pose;
-            swerveOdometry.resetPose(pose);
+    public void resetSteerAbsoluteAngle() {
+        for (int i = 0; i < modules.length; i++) {
+            modules[i].resetAbsoluteSteerAngle();
         }
     }
-
-    public void resetGyroAngle(Rotation2 angle) {
-        synchronized (sensorLock) {
-            gyroscope.setAdjustmentAngle(
-                    gyroscope.getUnadjustedAngle().rotateBy(angle.inverse())
-            );
-        }
-    }
-
 
     public double getAverageAbsoluteValueVelocity() {
         double averageVelocity = 0;

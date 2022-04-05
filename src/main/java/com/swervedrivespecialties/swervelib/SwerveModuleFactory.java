@@ -1,8 +1,8 @@
 package com.swervedrivespecialties.swervelib;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
+import org.frcteam2910.c2020.Constants;
 
 public class SwerveModuleFactory<DriveConfiguration, SteerConfiguration> {
     private final ModuleConfiguration moduleConfiguration;
@@ -49,6 +49,9 @@ public class SwerveModuleFactory<DriveConfiguration, SteerConfiguration> {
         }
 
         @Override
+        public void setVoltageRamp(double rampTime){driveController.setVoltageRamp(rampTime);}
+
+        @Override
         public double getDriveVelocity() {
             return driveController.getStateVelocity();
         }
@@ -59,18 +62,19 @@ public class SwerveModuleFactory<DriveConfiguration, SteerConfiguration> {
         }
         
         @Override
+        public void setMotorNeutralMode(NeutralMode modeType) {
+            driveController.setMotorNeutralMode(modeType);
+        }
+
+        @Override
         public void resetAbsoluteSteerAngle() {
             steerController.resetAbsoluteSteerAngle();
         }
 
+
         @Override
         public void setEncoderAutoResetIterations(int iterations) {
             steerController.setEncoderAutoResetIterations(iterations);
-        }
-
-        @Override
-        public void setMotorNeutralMode(NeutralMode modeType) {
-            driveController.setMotorNeutralMode(modeType);
         }
 
         @Override

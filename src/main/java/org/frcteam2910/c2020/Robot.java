@@ -132,6 +132,7 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         updateManager.startLoop(5.0e-3);
+        robotContainer.getDrivetrainSubsystem().setCoast();
     }
 
     @Override
@@ -206,11 +207,14 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopInit() {
+        robotContainer.getDrivetrainSubsystem().setBrake();
+        // robotContainer.getDrivetrainSubsystem().alignWheels();
     }
 
     @Override
     public void teleopPeriodic() {
-        
+        // Hand Massage for all those long, arduous driving sessions.
+		
         // robotContainer.getPrimaryController().setRumble(RumbleType.kLeftRumble, 1);
         // robotContainer.getPrimaryController().setRumble(RumbleType.kRightRumble, 1);
     }

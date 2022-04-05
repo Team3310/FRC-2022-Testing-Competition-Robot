@@ -70,7 +70,7 @@ public class RobotContainer {
         );
 
         primaryController.getRightBumperButton().whenPressed(
-                new ChangeDriveMode(DriveControlMode.JOYSTICKS)
+                () -> drivetrainSubsystem.setControlMode(DriveControlMode.ROBOT_CENTRIC)
         );
 
         primaryController.getLeftBumperButton().whenPressed(
